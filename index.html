@@ -2,111 +2,116 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>BULLSEYE | Professional Darts System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@900&family=Oswald:wght@400;700;900&display=swap');
-        :root { --bull-red: #bb0000; --bull-dark: #070707; --bull-yellow: #ffff00; }
+        :root { --bull-red: #bb0000; --bull-dark: #070707; }
         
-        body { background-color: var(--bull-dark); font-family: 'Oswald', sans-serif; color: white; text-transform: uppercase; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        
-        /* BRANDING */
-        .hero-gradient { background: radial-gradient(circle at 15% 25%, rgba(187, 0, 0, 0.15) 0%, transparent 50%), var(--bull-dark); }
-        .prop-card { background: rgba(255,255,255,0.02); border-left: 3px solid var(--bull-red); padding: 1.25rem; }
-
-        /* SCORING INTERFACE - MOBILE FIRST SPLIT */
-        .game-wrapper { display: flex; flex-direction: column; height: 100%; flex: 1; }
-        
-        .player-panel { 
-            flex: 1; 
+        body { 
+            background-color: var(--bull-dark); 
+            font-family: 'Oswald', sans-serif; 
+            color: white; 
+            text-transform: uppercase; 
+            overflow: hidden; 
+            height: 100vh; 
+            height: 100dvh; 
             display: flex; 
             flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            position: relative; 
-            border: 1px solid #1a1a1a;
-            transition: background 0.3s;
-            padding: 10px;
         }
 
-        .active-player { background-color: #0d0d0d; border-color: var(--bull-red); z-index: 10; }
+        /* HERO BRANDING */
+        .hero-gradient { background: radial-gradient(circle at 15% 25%, rgba(187, 0, 0, 0.15) 0%, transparent 50%), var(--bull-dark); }
+        .hero-logo { font-size: clamp(3.5rem, 10vw, 7.5rem); font-weight: 900; line-height: 0.8; letter-spacing: -0.05em; }
+        .prop-card { background: rgba(255,255,255,0.02); border-left: 3px solid var(--bull-red); padding: 1.25rem; }
+
+        /* SCORING LAYOUT */
+        .game-wrapper { display: flex; flex-direction: column; flex: 1; min-height: 0; position: relative; }
+        .player-panel { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; border: 1px solid #1a1a1a; padding: 5px; min-height: 0; }
+        .active-player { background-color: #0d0d0d; }
         .active-player::after { 
             content: 'AT THE OCHE'; 
             position: absolute; 
-            top: 10px; 
+            top: 12px; 
             color: var(--bull-red); 
             font-weight: 900; 
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             letter-spacing: 2px; 
             animation: blink 1.2s infinite; 
         }
-
         @keyframes blink { 50% { opacity: 0; } }
         
-        /* SCORE SCALING - PREVENTS OVERLAP */
-        .score-font { font-family: 'Chivo Mono', monospace; font-weight: 900; font-size: clamp(3.5rem, 15vh, 25vh); line-height: 0.9; }
+        .score-font { font-family: 'Chivo Mono', monospace; font-weight: 900; font-size: clamp(3rem, 12vh, 22vh); line-height: 1; }
         
-        /* MODALS */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; align-items: center; justify-content: center; }
-        .modal-content { border-top: 10px solid var(--bull-red); background: #0a0a0a; padding: 3rem; text-align: center; width: 90%; }
-
-        /* NUMPAD */
+        /* INPUT AREA */
         .numpad-container { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
-            gap: 1px; 
             background: #222; 
-            height: 35vh; /* Fixed height for numpad */
+            gap: 1px; 
+            flex-shrink: 0; 
+            height: 33dvh; 
+            padding-bottom: env(safe-area-inset-bottom); 
         }
-        .num-btn { background: #000; font-size: 1.5rem; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+        .num-btn { background: #000; font-size: 1.4rem; font-weight: 900; display: flex; align-items: center; justify-content: center; }
         .num-btn:active { background: #333; }
-        .enter-btn { background: var(--bull-red); grid-column: span 3; font-weight: 900; font-size: 1.5rem; italic; }
+        .enter-btn { background: var(--bull-red); grid-column: span 3; font-weight: 900; font-size: 1.4rem; italic; }
+
+        /* CONTROL BUTTONS */
+        .control-btn { position: absolute; bottom: 20px; z-index: 50; padding: 10px 20px; font-weight: 900; font-size: 0.75rem; letter-spacing: 1px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
+        .control-btn:hover { background: var(--bull-red); border-color: var(--bull-red); }
 
         @media (min-width: 1024px) {
             .game-wrapper { flex-direction: row; }
             .numpad-container { display: none; }
             .score-font { font-size: clamp(6rem, 20vw, 30vh); }
-            .active-player::after { top: 8%; font-size: 1rem; }
         }
     </style>
 </head>
 <body x-data="dartsApp()" @keydown.window="handleKeyboard($event.key)">
 
     <template x-if="modal.show">
-        <div class="modal-overlay">
-            <div class="modal-content animate-bounce">
-                <h3 class="text-zinc-500 font-black tracking-widest mb-2" x-text="modal.type"></h3>
-                <h2 class="text-5xl lg:text-9xl font-black italic mb-6" x-text="modal.winner"></h2>
-                <div class="h-1 w-24 bg-red-600 mx-auto"></div>
+        <div class="fixed inset-0 bg-black/95 z-[1000] flex items-center justify-center p-6">
+            <div class="border-t-[10px] border-red-600 bg-zinc-950 p-12 text-center w-full max-w-xl">
+                <h3 class="text-zinc-500 font-black tracking-[0.3em] mb-4 text-sm" x-text="modal.type"></h3>
+                <h2 class="text-6xl lg:text-9xl font-black italic mb-8" x-text="modal.winner"></h2>
+                <div class="h-1.5 w-24 bg-red-600 mx-auto"></div>
             </div>
         </div>
     </template>
 
     <template x-if="screen === 'landing'">
-        <div class="min-h-screen flex flex-col hero-gradient p-8 lg:p-24 overflow-y-auto">
-            <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12">
-                <div class="lg:col-span-7 space-y-8">
-                    <h1 class="text-6xl lg:text-9xl font-black italic">BULLS<span class="text-red-600">EYE</span></h1>
+        <div class="h-full flex flex-col hero-gradient p-8 lg:p-24 overflow-y-auto">
+            <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+                <div class="lg:col-span-7 space-y-12">
+                    <div class="space-y-4">
+                        <h1 class="hero-logo italic">BULLS<span class="text-red-600">EYE</span></h1>
+                        <p class="text-zinc-500 font-black tracking-[0.5em] text-xs">ELITE PERFORMANCE TRACKER</p>
+                    </div>
+                    <h2 class="text-5xl lg:text-7xl font-black italic leading-[0.9] max-w-xl">EVERY DART<br>COUNTS.</h2>
                     <div class="grid grid-cols-2 gap-4 max-w-lg">
-                        <div class="prop-card"><h3 class="text-xs font-black italic">DUAL VIEW</h3><p class="text-[10px] text-zinc-600 uppercase">Always Visible</p></div>
-                        <div class="prop-card"><h3 class="text-xs font-black italic">LIVE STATS</h3><p class="text-[10px] text-zinc-600 uppercase">Leg Averages</p></div>
+                        <div class="prop-card"><h4 class="text-xs font-black italic">PRO FLOW</h4><p class="text-[10px] text-zinc-600 uppercase">Dual-Player Focus</p></div>
+                        <div class="prop-card"><h4 class="text-xs font-black italic">STAGE UI</h4><p class="text-[10px] text-zinc-600 uppercase">Zero Distraction</p></div>
+                        <div class="prop-card"><h4 class="text-xs font-black italic">LEG STATS</h4><p class="text-[10px] text-zinc-600 uppercase">Real-time Average</p></div>
+                        <div class="prop-card"><h4 class="text-xs font-black italic">RESPONSIVE</h4><p class="text-[10px] text-zinc-600 uppercase">Locked Viewport</p></div>
                     </div>
                 </div>
-                <div class="lg:col-span-5 bg-zinc-950 p-8 border-t-8 border-red-600 shadow-2xl">
-                    <div class="space-y-6">
+                <div class="lg:col-span-5 bg-zinc-950/80 p-10 border-t-8 border-red-600 shadow-2xl backdrop-blur-md">
+                    <div class="space-y-8">
                         <div class="flex gap-2">
-                            <button @click="startScore = 301" :class="startScore === 301 ? 'bg-red-600' : 'bg-zinc-900'" class="flex-1 py-4 font-black">301</button>
-                            <button @click="startScore = 501" :class="startScore === 501 ? 'bg-red-600' : 'bg-zinc-900'" class="flex-1 py-4 font-black">501</button>
+                            <template x-for="m in [301, 501]"><button @click="startScore = m" :class="startScore === m ? 'bg-red-600' : 'bg-zinc-900'" class="flex-1 py-5 text-3xl font-black italic" x-text="m"></button></template>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
-                            <select x-model.number="legsToSet" class="bg-black p-4 font-black border border-zinc-800"><option value="1">1 LEG</option><option value="3">3 LEGS</option></select>
-                            <select x-model.number="setsToMatch" class="bg-black p-4 font-black border border-zinc-800"><option value="1">1 SET</option><option value="3">3 SETS</option></select>
+                            <select x-model.number="legsToSet" class="bg-black p-4 font-black border border-zinc-800 outline-none"><option value="1">1 LEG</option><option value="3">3 LEGS</option></select>
+                            <select x-model.number="setsToMatch" class="bg-black p-4 font-black border border-zinc-800 outline-none"><option value="1">1 SET</option><option value="3">3 SETS</option></select>
                         </div>
-                        <input type="text" x-model="p1Name" class="w-full p-4 bg-black border border-zinc-800 font-black text-center" placeholder="PLAYER 1">
-                        <input type="text" x-model="p2Name" class="w-full p-4 bg-black border border-zinc-800 font-black text-center" placeholder="PLAYER 2">
-                        <button @click="startGame" class="w-full bg-red-600 py-6 text-2xl font-black italic">START MATCH</button>
+                        <div class="space-y-4">
+                            <input type="text" x-model="p1Name" class="w-full p-4 bg-black border border-zinc-800 font-black text-center" placeholder="PLAYER 1">
+                            <input type="text" x-model="p2Name" class="w-full p-4 bg-black border border-zinc-800 font-black text-center" placeholder="PLAYER 2">
+                        </div>
+                        <button @click="startGame" class="w-full bg-red-600 py-8 text-3xl font-black italic">ENTER OCHE</button>
                     </div>
                 </div>
             </div>
@@ -115,52 +120,57 @@
 
     <template x-if="screen === 'game'">
         <div class="flex flex-col h-full">
+            <div class="lg:hidden flex justify-between items-center px-4 py-2 bg-zinc-950 border-b border-white/5">
+                <span class="text-[10px] font-black tracking-widest text-zinc-500">LIVE MATCH</span>
+                <button @click="location.reload()" class="text-[10px] font-black bg-white/10 px-3 py-1">QUIT</button>
+            </div>
+
             <div class="game-wrapper">
                 <template x-for="(player, index) in players" :key="index">
                     <div :class="{ 'active-player': activePlayerIndex === index }" class="player-panel">
-                        <div class="text-center mb-1">
-                            <span class="font-black text-xl lg:text-4xl italic" x-text="player.name"></span>
-                            <div class="flex gap-1 mt-1 justify-center">
-                                <template x-for="s in Array.from({length: setsToMatch})"><div class="w-2 h-2 lg:w-4 lg:h-4" :class="player.sets > _index ? 'bg-red-600' : 'bg-zinc-900'"></div></template>
+                        <div class="text-center">
+                            <span class="font-black text-xl lg:text-4xl italic block truncate max-w-[200px]" x-text="player.name"></span>
+                            <div class="flex gap-1.5 mt-2 justify-center">
+                                <template x-for="(s, i) in Array.from({length: setsToMatch})"><div class="w-2.5 h-2.5" :class="player.sets > i ? 'bg-red-600' : 'bg-zinc-900'"></div></template>
                             </div>
                         </div>
-                        
                         <div class="score-font" x-text="player.score"></div>
-                        
-                        <div class="h-10 lg:h-20 flex items-center text-3xl lg:text-6xl font-black text-red-600" x-text="activePlayerIndex === index ? (currentInput || '---') : ''"></div>
-                        
-                        <div class="flex gap-8 text-xs lg:text-xl font-black text-zinc-600 mt-2">
+                        <div class="h-10 lg:h-16 flex items-center text-4xl lg:text-6xl font-black text-red-600" x-text="activePlayerIndex === index ? (currentInput || '---') : ''"></div>
+                        <div class="flex gap-8 text-[11px] lg:text-lg font-black text-zinc-600">
                             <div>AVG: <span class="text-white" x-text="calcAvg(player)"></span></div>
                             <div>LEGS: <span class="text-white" x-text="player.legs"></span></div>
                         </div>
                     </div>
                 </template>
+                
+                <button @click="undo()" class="hidden lg:block control-btn left-5">UNDO SHOT</button>
+                <button @click="location.reload()" class="hidden lg:block control-btn right-5">QUIT MATCH</button>
             </div>
-            
+
             <div class="numpad-container lg:hidden">
                 <template x-for="n in ['1','2','3','4','5','6','7','8','9','0','DEL','UNDO']">
                     <button @click="handleNumpad(n)" class="num-btn" x-text="n"></button>
                 </template>
-                <button @click="submitScore" class="enter-btn">ENTER SCORE</button>
+                <button @click="submitScore" class="enter-btn italic">ENTER SCORE</button>
             </div>
         </div>
     </template>
 
     <template x-if="screen === 'stats'">
-        <div class="h-full flex flex-col items-center justify-center p-8 hero-gradient">
-            <h1 class="text-4xl lg:text-8xl font-black italic mb-8" x-text="matchWinner + ' VICTORIOUS'"></h1>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl">
+        <div class="h-full flex flex-col items-center justify-center p-8 hero-gradient overflow-y-auto">
+            <h1 class="text-5xl lg:text-8xl font-black italic mb-12 text-center" x-text="matchWinner + ' VICTORIOUS'"></h1>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl">
                 <template x-for="p in players">
-                    <div class="bg-zinc-950 p-6 border-l-8 border-red-600">
-                        <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-black italic" x-text="p.name"></h2><span class="text-red-600 text-4xl font-black" x-text="p.sets"></span></div>
-                        <div class="flex gap-10 font-black">
-                            <div><div class="text-zinc-600 text-[10px]">3-DART AVG</div><div class="text-2xl" x-text="calcAvg(p)"></div></div>
-                            <div><div class="text-zinc-600 text-[10px]">HIGH SCORE</div><div class="text-2xl" x-text="p.highScore"></div></div>
+                    <div class="bg-zinc-950 p-10 border-t-8 border-zinc-800">
+                        <div class="flex justify-between items-center mb-10"><h2 class="text-4xl font-black italic" x-text="p.name"></h2><span class="text-red-600 text-7xl font-black" x-text="p.sets"></span></div>
+                        <div class="grid grid-cols-2 gap-10 font-black">
+                            <div><div class="text-zinc-600 text-xs uppercase tracking-widest">Average</div><div class="text-4xl" x-text="calcAvg(p)"></div></div>
+                            <div><div class="text-zinc-600 text-xs uppercase tracking-widest">High Score</div><div class="text-4xl" x-text="p.highScore"></div></div>
                         </div>
                     </div>
                 </template>
             </div>
-            <button @click="location.reload()" class="mt-12 bg-white text-black px-12 py-4 font-black italic">NEW MATCH</button>
+            <button @click="location.reload()" class="mt-16 bg-white text-black px-16 py-6 text-2xl font-black italic">NEW MATCH</button>
         </div>
     </template>
 
@@ -186,7 +196,7 @@
                     if (key === 'Enter') this.submitScore();
                 },
                 handleNumpad(n) {
-                    if (n === 'DEL') this.currentInput = this.currentInput.slice(0,-1);
+                    if (n === 'DEL') this.currentInput = this.currentInput.slice(0, -1);
                     else if (n === 'UNDO') this.undo();
                     else if (this.currentInput.length < 3) this.currentInput += n;
                 },
@@ -195,13 +205,19 @@
                     if (val > 180) { this.currentInput = ''; return; }
                     const p = this.players[this.activePlayerIndex];
                     const rem = p.score - val;
+                    
+                    // SAVE HISTORY
+                    this.history.push(JSON.stringify({ 
+                        players: JSON.parse(JSON.stringify(this.players)), 
+                        active: this.activePlayerIndex 
+                    }));
+
                     if (rem === 0) {
                         p.totalPoints += val; p.dartsThrown += 3; p.score = 0;
                         this.winLeg(p);
                     } else if (rem < 2 && rem !== 0) {
                         this.activePlayerIndex = (this.activePlayerIndex + 1) % 2;
                     } else if (rem > 1) {
-                        this.history.push(JSON.stringify({ players: JSON.parse(JSON.stringify(this.players)), active: this.activePlayerIndex }));
                         p.score = rem; p.totalPoints += val; p.dartsThrown += 3;
                         if (val > p.highScore) p.highScore = val;
                         this.activePlayerIndex = (this.activePlayerIndex + 1) % 2;
@@ -229,7 +245,13 @@
                     this.activePlayerIndex = this.starterIndex;
                 },
                 calcAvg(p) { return p.dartsThrown === 0 ? '0.0' : ((p.totalPoints / p.dartsThrown) * 3).toFixed(1); },
-                undo() { if (this.history.length > 0) { const s = JSON.parse(this.history.pop()); this.players = s.players; this.activePlayerIndex = s.active; } }
+                undo() { 
+                    if (this.history.length > 0) { 
+                        const s = JSON.parse(this.history.pop()); 
+                        this.players = s.players; 
+                        this.activePlayerIndex = s.active; 
+                    } 
+                }
             }
         }
     </script>
