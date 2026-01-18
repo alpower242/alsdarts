@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BULLSEYE ARCADE SCORER</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@900&family=Oswald:wght@700&display=swap');
+        
+        :root { 
+            --bull-red: #bb0000; 
+            --bull-dark: #0a0a0a;
+            --bull-grey: #151515;
+            --bull-yellow: #ffff00; 
+        }
+
+        body { 
+            background-color: var(--bull-dark); 
+            font-family: 'Oswald', sans-serif; 
+            color: white; 
+            text-transform: uppercase; 
+            overflow: hidden; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        .score-font { font-family: 'Chivo Mono', monospace; color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.1); }
+        
+        .panel-main { 
+            background-color: var(--bull-grey); 
+            border: 4px solid #000; 
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.7);
+        }
+        
+        .active-player { 
+            border: 6px solid var(--bull-red) !important; 
+            background-color: #1a1a1a;
+            z-index: 10; 
+            animation: panelPulse 2s infinite ease-in-out; 
+        }
+
+        @keyframes panelPulse { 
+            0%, 100% { border-color: var(--bull-red); } 
+            50% { border-color: #ff3333; box-shadow: 0 0 20px rgba(255,0,0,0.4); } 
+        }
+
+        .flashing-placeholder { animation: blink 0.8s step-start infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Keypad Layout Fix */
+        .arcade-keypad { 
+            display: grid; 
+            height: 42vh; 
+            background-color: #000; 
+        }
+
+        @media (min-width: 768px) { 
+            .arcade-keypad { 
+                display: none; 
+                height: 0; 
+            } 
+        }
+
+        .keypad-btn { 
+            background-color: #111; 
+            border: 1px solid #222; 
+            color: white; 
+            font-family: 'Chivo Mono', monospace; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1.8rem; 
+            touch-action: manipulation; 
+        }
+        .keypad-btn:active { background-color: var(--bull-red); }
+        
+        .enter-btn { 
+            background-color: var(--bull-red); 
+            grid-column: span 3; 
+            font-weight: 900; 
+            color: white; 
+        }
+
+        .checkout-bar { 
+            background: #000; 
+            color: var(--bull-yellow); 
+            border: 1px solid #333; 
+            padding: 4px 15px; 
+            font-family: 'Chivo Mono', monospace; 
+        }
+
+        input { background: #fff !important; color: #000 !important; }
+    </style>
+</head>
+<body x-data="dartsApp()" @keydown.window="handleKeyboard($event.key)" @click="initAudio()">
+
+    <template x-if="winner">
+        <div class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center border-[10px] border-red-600 p-4">
+            <h1 class="text-7xl md:text-9xl font-black mb-2 text-white italic text-center" x-text="winner.name + ' Wins!'"></h1>
+            <h2 class="text-3xl mb-8 text-red-600 font-black">GAME SHOT</h2>
+            <button @click="resetLeg()" class="bg-red-600 text-white w-full max-w-xs py-6 text-3xl font-black border-4 border-white">
+                NEXT LEG
+            </button>
+        </div>
+    </template>
+
+    <template x-if="screen === 'setup'">
+        <div class="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full">
+            <h1 class="text-7xl italic font-black text-white text-center mb-4">BULLS<span class="text-red-600">EYE</span></h1>
+            <div class="bg-zinc-900 p-6 border-b-8 border-red-600 space-y-4">
+                <div class="flex gap-2">
+                    <template x-for="type in [301, 501]">
+                        <button @click="startScore = type" :class="startScore === type ? 'bg-red-600 text-white' : 'bg-black text-zinc-500'" class="flex-1 py-3 text-2xl font-black border-2 border-black" x-text="type"></button>
+                    </template>
+                </div>
+                <template x-for="(player, index) in players" :key="index">
+                    <input type="text" x-model="player.name" class="w-full p-4 border-2 border-black font-black uppercase outline-none focus:ring-4 focus:ring-red-600">
+                </template>
+                <button @click="startGame" class="w-full bg-red-600 text-white py-4 text-3xl font-black border-2 border-white uppercase italic tracking-tighter">START MATCH</button>
+            </div>
+        </div>
+    </template>
+
+    <template x-if="screen === 'game'">
+        <div class="flex flex-col h-full overflow-hidden">
+            <div class="grid gap-2 p-2 flex-grow min-h-0" :class="players.length > 2 ? 'grid-cols-2' : 'grid-cols-1'">
+                <template x-for="(player, index) in players" :key="index">
+                    <div @click="activePlayerIndex = index"
+                         :class="activePlayerIndex === index ? 'active-player' : ''"
+                         class="panel-main flex flex-col items-center justify-center relative overflow-hidden h-full">
+                        
+                        <div class="absolute top-0 left-0 bg-red-600 px-6 py-1 italic">
+                            <span class="text-xl md:text-4xl font-black text-white" x-text="player.name"></span>
+                        </div>
+
+                        <div class="score-font text-8xl md:text-[14rem] leading-none" x-text="player.score"></div>
+                        
+                        <div class="h-14 flex items-center justify-center">
+                            <template x-if="activePlayerIndex === index && player.score <= 170">
+                                <div x-show="getCheckout(player.score)" class="checkout-bar text-lg md:text-3xl font-black" x-text="getCheckout(player.score)"></div>
+                            </template>
+                        </div>
+
+                        <div class="h-12 flex items-center">
+                            <span x-show="activePlayerIndex === index" 
+                                  :class="currentInput === '' ? 'flashing-placeholder opacity-50' : ''"
+                                  class="text-4xl md:text-5xl font-mono text-white" x-text="currentInput || '---'"></span>
+                        </div>
+
+                        <div class="w-full grid grid-cols-2 bg-black py-4 md:py-8 border-t-4 border-red-600">
+                            <div class="text-center border-r-2 border-zinc-800">
+                                <span class="text-xs md:text-2xl block text-zinc-500 font-bold">AVERAGE</span>
+                                <span class="text-3xl md:text-7xl text-white font-black" x-text="calcAvg(player, 3)"></span>
+                            </div>
+                            <div class="text-center">
+                                <span class="text-xs md:text-2xl block text-zinc-500 font-bold">LEGS</span>
+                                <span class="text-3xl md:text-7xl text-white font-black" x-text="player.legs"></span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="arcade-keypad p-1 grid-cols-3 gap-1 border-t-4 border-red-600">
+                <template x-for="n in ['1','2','3','4','5','6','7','8','9','DEL','0']">
+                    <button @click="n === 'DEL' ? currentInput = currentInput.slice(0, -1) : pressKey(n)" 
+                            class="keypad-btn" :class="n === 'DEL' ? 'text-red-600' : ''" x-text="n"></button>
+                </template>
+                <div class="bg-zinc-900 opacity-10"></div>
+                <button @click="submitScore" class="keypad-btn enter-btn text-2xl">ENTER SCORE</button>
+            </div>
+
+            <div class="bg-black px-4 py-2 flex justify-between border-t border-zinc-900 shrink-0">
+                <button @click="undo" class="text-xs font-bold text-zinc-600 hover:text-red-600">UNDO</button>
+                <button @click="if(confirm('Quit?')) location.reload()" class="text-xs font-bold text-zinc-800 hover:text-white">RESET</button>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        function dartsApp() {
+            return {
+                screen: 'setup', startScore: 501, winner: null, activePlayerIndex: 0, currentInput: '', history: [], audioCtx: null,
+                players: [{ name: 'PLAYER 1', score: 501, legs: 0, totalPoints: 0, dartsThrown: 0 }, { name: 'PLAYER 2', score: 501, legs: 0, totalPoints: 0, dartsThrown: 0 }],
+                
+                getCheckout(s) {
+                    if (s > 170 || [169, 168, 166, 165, 163, 162, 159].includes(s)) return null;
+                    const table = {
+                        170: "T20 T20 BULL", 167: "T20 T19 BULL", 164: "T20 T18 BULL", 161: "T20 T17 BULL", 160: "T20 T20 D20",
+                        150: "T20 T18 D18", 140: "T20 T20 D10", 121: "T20 T15 D8", 100: "T20 D20", 80: "T20 D10", 60: "S20 D20", 40: "D20", 32: "D16"
+                    };
+                    if (table[s]) return table[s];
+                    if (s <= 40 && s % 2 === 0) return "D" + (s/2);
+                    if (s <= 60) return "S" + (s-40) + " D20";
+                    return "FINISH POSSIBLE";
+                },
+
+                initAudio() { if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); },
+                startGame() { this.initAudio(); this.players.forEach(p => { p.score = this.startScore; p.totalPoints = 0; p.dartsThrown = 0; }); this.screen = 'game'; },
+                handleKeyboard(key) { if (this.screen === 'game' && !this.winner) { if (!isNaN(key)) this.pressKey(key); if (key === 'Enter') this.submitScore(); if (key === 'Backspace') this.currentInput = this.currentInput.slice(0, -1); } },
+                pressKey(val) { if (this.currentInput.length < 3) this.currentInput += val; },
+                submitScore() {
+                    const val = parseInt(this.currentInput);
+                    if (isNaN(val) || val > 180) { this.currentInput = ''; return; }
+                    const p = this.players[this.activePlayerIndex];
+                    this.history.push(JSON.parse(JSON.stringify({ players: this.players, active: this.activePlayerIndex })));
+                    if (p.score - val === 0) { p.totalPoints += val; p.dartsThrown += 3; p.legs++; this.winner = p; }
+                    else if (p.score - val >= 2) { p.score -= val; p.totalPoints += val; p.dartsThrown += 3; this.activePlayerIndex = (this.activePlayerIndex + 1) % this.players.length; }
+                    else { this.activePlayerIndex = (this.activePlayerIndex + 1) % this.players.length; }
+                    this.currentInput = '';
+                },
+                calcAvg(p, t) { return p.dartsThrown === 0 ? '0.0' : ((p.totalPoints / p.dartsThrown) * t).toFixed(1); },
+                resetLeg() { this.players.forEach(p => p.score = this.startScore); this.winner = null; this.activePlayerIndex = 0; },
+                undo() { if (this.history.length > 0) { const last = this.history.pop(); this.players = last.players; this.activePlayerIndex = last.active; } }
+            }
+        }
+    </script>
+</body>
+</html>
