@@ -12,112 +12,129 @@
         
         body { background: var(--bull-dark); font-family: 'Oswald', sans-serif; color: white; text-transform: uppercase; margin: 0; height: 100dvh; overflow: hidden; }
         
-        /* LANDING PAGE SCROLLABLE */
-        .landing-page { height: 100dvh; overflow-y: auto; background: radial-gradient(circle at 15% 25%, rgba(255, 0, 0, 0.2) 0%, transparent 50%), var(--bull-dark); }
-        .ticker-wrap { background: var(--bull-red); padding: 8px 0; border-bottom: 4px solid white; overflow: hidden; }
-        .ticker { display: inline-block; white-space: nowrap; animation: ticker 30s linear infinite; font-weight: 900; color: black; }
+        .landing-page { height: 100dvh; overflow-y: auto; background: radial-gradient(circle at 15% 25%, rgba(255, 0, 0, 0.3) 0%, transparent 50%), linear-gradient(0deg, #000 0%, #0a0a0a 100%); }
+        .ticker-wrap { background: var(--bull-red); padding: 12px 0; border-bottom: 4px solid white; overflow: hidden; position: sticky; top: 0; z-index: 100; }
+        .ticker { display: inline-block; white-space: nowrap; animation: ticker 25s linear infinite; font-weight: 900; color: black; font-style: italic; font-size: 1.2rem; }
         @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
-        /* GAME LAYOUT */
+        /* GAME ENGINE LAYOUT */
         .game-layout { display: flex; flex-direction: column; height: 100dvh; width: 100%; }
-        
-        /* PLAYER GRID */
-        .player-grid { 
-            flex: 1; 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            grid-template-rows: repeat(2, 1fr); 
-            gap: 1px; 
-            background: #1a1a1a;
-            min-height: 0;
-        }
-        /* Handle 2 players: Top/Bottom split */
+        .player-grid { flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 1px; background: #222; min-height: 0; }
         .grid-2-players { grid-template-columns: 1fr !important; }
         
-        .player-card { 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            background: var(--bull-dark); position: relative; padding: 10px;
-        }
-        .active-card { background: #0d0d0d; border: 3px solid var(--bull-red); z-index: 10; }
+        .player-card { display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--bull-dark); position: relative; padding: 10px; transition: all 0.2s; }
+        .active-card { background: #0a0a0a; box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.15); border: 4px solid var(--bull-red); z-index: 10; }
         
-        .score-text { font-family: 'Chivo Mono', monospace; font-weight: 900; line-height: 1; }
-        .score-large { font-size: clamp(4rem, 15vh, 20vw); }
-        .score-small { font-size: clamp(2.5rem, 10vh, 12vw); }
+        .score-text { font-family: 'Chivo Mono', monospace; font-weight: 900; line-height: 0.9; letter-spacing: -0.05em; }
+        .score-large { font-size: clamp(5rem, 22vh, 25vw); }
+        .score-small { font-size: clamp(3rem, 12vh, 15vw); }
 
-        /* MOBILE NUMPAD (FIXED AT BOTTOM) */
-        .numpad { 
-            display: grid; grid-template-columns: repeat(3, 1fr); 
-            height: 35dvh; background: #333; gap: 1px; flex-shrink: 0;
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-        .numpad button { 
-            background: #000; color: white; font-size: 1.8rem; font-weight: 900; 
-            border: none; display: flex; align-items: center; justify-content: center;
-        }
-        .numpad button:active { background: #222; }
-        .btn-enter { background: var(--bull-red) !important; grid-column: span 3; font-style: italic; }
-        .btn-action { background: #111 !important; color: #666 !important; font-size: 0.9rem !important; }
+        /* THE NUMPAD (MOBILE ONLY) */
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); height: 38dvh; background: #333; gap: 1px; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); }
+        .numpad button { background: #000; color: white; font-size: 2.2rem; font-weight: 900; border: none; font-style: italic; }
+        .numpad button:active { background: var(--bull-red); color: white; }
+        .btn-enter { background: var(--bull-red) !important; grid-column: span 3; font-size: 2.5rem !important; }
+        .btn-action { background: #111 !important; color: #555 !important; font-size: 1rem !important; }
 
         @media (min-width: 1024px) {
             .player-grid { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)) !important; grid-template-rows: 1fr !important; }
             .numpad { display: none; }
-            .desktop-btns { position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; z-index: 100; }
-            .d-btn { background: #111; padding: 10px 20px; border: 1px solid #333; font-weight: 900; color: #666; }
+            .desktop-btns { position: absolute; bottom: 30px; right: 30px; display: flex; gap: 15px; z-index: 100; }
+            .d-btn { background: #111; padding: 15px 30px; border: 2px solid #333; font-weight: 900; color: #444; cursor: pointer; }
+            .d-btn:hover { border-color: var(--bull-red); color: white; }
         }
     </style>
 </head>
 <body x-data="dartsApp()" @keydown.window="handleKey($event.key)">
 
     <template x-if="modal.show">
-        <div class="fixed inset-0 bg-black/95 z-[2000] flex items-center justify-center p-4">
-            <div class="border-4 border-red-600 bg-zinc-950 p-6 text-center w-full max-w-lg">
-                <h3 class="text-zinc-500 font-black text-xs mb-2" x-text="modal.type"></h3>
-                <h2 class="text-5xl font-black italic mb-6" x-text="modal.winner"></h2>
-                <div class="space-y-2 mb-6">
+        <div class="fixed inset-0 bg-black/98 z-[2000] flex items-center justify-center p-4">
+            <div class="border-[8px] border-red-600 bg-black p-8 text-center w-full max-w-xl shadow-[0_0_100px_rgba(255,0,0,0.4)]">
+                <h3 class="text-red-600 font-black text-sm mb-2 tracking-[0.5em]" x-text="modal.type"></h3>
+                <h2 class="text-7xl lg:text-9xl font-black italic mb-8 leading-none" x-text="modal.winner"></h2>
+                <div class="space-y-4 mb-10">
                     <template x-for="p in players">
-                        <div class="bg-zinc-900 p-3 flex justify-between items-center border border-zinc-800">
-                            <span class="font-black" x-text="p.name"></span>
-                            <span class="text-red-600 font-black" x-text="calcAvg(p)"></span>
+                        <div class="bg-zinc-900/50 p-5 flex justify-between items-center border-l-4 border-red-600">
+                            <span class="font-black text-2xl italic" x-text="p.name"></span>
+                            <div class="text-right">
+                                <span class="block text-[10px] text-zinc-500 font-black">3-DART AVG</span>
+                                <span class="text-white font-black text-4xl" x-text="calcAvg(p)"></span>
+                            </div>
                         </div>
                     </template>
                 </div>
-                <button @click="nextStep()" class="w-full bg-red-600 py-4 font-black italic text-xl">CONTINUE</button>
+                <button @click="nextStep()" class="w-full bg-red-600 py-6 font-black italic text-3xl hover:bg-white hover:text-black transition-all transform active:scale-95">NEXT LEG</button>
             </div>
         </div>
     </template>
 
     <template x-if="screen === 'landing'">
         <div class="landing-page">
-            <div class="ticker-wrap"><div class="ticker">NO MATHS REQUIRED • NINE DARTERS ONLY • THE GUV'NOR OF DARTS APPS • DON'T CHOKE ON THE DOUBLE</div></div>
-            <div class="max-w-4xl mx-auto p-6 space-y-12 pt-10">
-                <h1 class="text-8xl lg:text-[12rem] font-black italic leading-none tracking-tighter">BULLS<span class="text-red-600">EYE</span></h1>
-                <div class="bg-zinc-950 p-6 border-4 border-zinc-800 space-y-6">
-                    <div class="flex gap-2">
-                        <button @click="startScore = 301" :class="startScore === 301 ? 'bg-red-600' : 'bg-zinc-900'" class="flex-1 py-4 text-2xl font-black italic">301</button>
-                        <button @click="startScore = 501" :class="startScore === 501 ? 'bg-red-600' : 'bg-zinc-900'" class="flex-1 py-4 text-2xl font-black italic">501</button>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-zinc-900 p-3 border border-zinc-800">
-                            <label class="text-[10px] font-black text-zinc-500">LEGS</label>
-                            <select x-model.number="legsToSet" class="w-full bg-transparent font-black text-xl text-red-600 outline-none"><option value="1">1</option><option value="3">3</option><option value="5">5</option></select>
+            <div class="ticker-wrap"><div class="ticker">DON'T CHOKE ON THE DOUBLE • WINNER BUYS THE ROUND • NO MATHS, JUST DARTS • THE GUV'NOR IS IN THE BUILDING • STAND BACK, PROS AT WORK</div></div>
+            <div class="max-w-6xl mx-auto p-6 lg:p-12 space-y-16">
+                
+                <header class="space-y-4">
+                    <h1 class="text-[5rem] lg:text-[14rem] font-black italic leading-[0.8] tracking-tighter">BULLS<span class="text-red-600">EYE.</span></h1>
+                    <p class="text-2xl lg:text-5xl font-black italic text-zinc-600">THE ABSOLUTE GUV'NOR OF SCORERS.</p>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                    <div class="bg-zinc-950 p-8 border-[6px] border-zinc-900 space-y-8">
+                        <div class="flex gap-4">
+                            <button @click="startScore = 301" :class="startScore === 301 ? 'bg-red-600' : 'bg-zinc-900 text-zinc-500'" class="flex-1 py-6 text-4xl font-black italic transition-all">301</button>
+                            <button @click="startScore = 501" :class="startScore === 501 ? 'bg-red-600' : 'bg-zinc-900 text-zinc-500'" class="flex-1 py-6 text-4xl font-black italic transition-all">501</button>
                         </div>
-                        <div class="bg-zinc-900 p-3 border border-zinc-800">
-                            <label class="text-[10px] font-black text-zinc-500">SETS</label>
-                            <select x-model.number="setsToMatch" class="w-full bg-transparent font-black text-xl text-red-600 outline-none"><option value="1">1</option><option value="3">3</option></select>
+                        
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="bg-zinc-900 p-4 border-b-4 border-red-600">
+                                <label class="text-xs font-black text-zinc-500">LEGS / SET</label>
+                                <select x-model.number="legsToSet" class="w-full bg-transparent font-black text-3xl outline-none"><option value="1">1</option><option value="3">3</option><option value="5">5</option></select>
+                            </div>
+                            <div class="bg-zinc-900 p-4 border-b-4 border-red-600">
+                                <label class="text-xs font-black text-zinc-500">SETS / MATCH</label>
+                                <select x-model.number="setsToMatch" class="w-full bg-transparent font-black text-3xl outline-none"><option value="1">1</option><option value="3">3</option></select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <template x-for="(p, i) in setupPlayers" :key="i">
+                                <input type="text" x-model="setupPlayers[i]" class="w-full p-6 bg-black border-2 border-zinc-800 font-black text-2xl italic uppercase outline-none focus:border-red-600 focus:bg-zinc-900 transition-all" :placeholder="'LEGEND '+(i+1)">
+                            </template>
+                        </div>
+
+                        <button @click="start()" class="w-full bg-red-600 py-8 text-4xl lg:text-5xl font-black italic hover:bg-white hover:text-red-600 transition-all shadow-[0_10px_0_0_#990000] active:shadow-none active:translate-y-[10px]">LET'S HAVE IT</button>
+                    </div>
+
+                    <div class="space-y-12 py-8">
+                        <div class="space-y-2">
+                            <h2 class="text-4xl font-black italic text-red-600">WHY THIS APP?</h2>
+                            <p class="text-2xl font-black italic">BECAUSE MATHS IS FOR THE PUB QUIZ, NOT THE OCHEY.</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 gap-6">
+                            <div class="border-l-4 border-zinc-800 pl-6">
+                                <h4 class="font-black text-xl italic">THE 170 BRAIN</h4>
+                                <p class="text-zinc-500 font-black italic">FULL 3-DART CHECKOUTS. IF IT'S ON, WE SHOW IT. NO GUESSING.</p>
+                            </div>
+                            <div class="border-l-4 border-zinc-800 pl-6">
+                                <h4 class="font-black text-xl italic">LEGENDARY AVERAGES</h4>
+                                <p class="text-zinc-500 font-black italic">REAL-TIME STATS. SEE EXACTLY WHO'S BOTTLE HAS GONE.</p>
+                            </div>
+                            <div class="border-l-4 border-zinc-800 pl-6">
+                                <h4 class="font-black text-xl italic">ZERO FLUFF</h4>
+                                <p class="text-zinc-500 font-black italic">NO LOGINS. NO ADS. NO NONSENSE. JUST DARTS.</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-red-600 p-6 -rotate-2">
+                            <h3 class="text-3xl font-black italic text-black uppercase">THE RULES OF THE PUB</h3>
+                            <ul class="text-black font-black italic list-disc list-inside">
+                                <li>LOOSER CHALKS (OR USES THE APP).</li>
+                                <li>FIRST TO THE BAR BUYS THE FIRST PINT.</li>
+                                <li>NINE DARTER = YOU'RE A GOD.</li>
+                            </ul>
                         </div>
                     </div>
-                    <template x-for="(p, i) in setupPlayers" :key="i">
-                        <input type="text" x-model="setupPlayers[i]" class="w-full p-4 bg-black border-2 border-zinc-800 font-black italic uppercase outline-none focus:border-red-600" :placeholder="'PLAYER '+(i+1)">
-                    </template>
-                    <button @click="start()" class="w-full bg-red-600 py-6 text-3xl font-black italic">START GAME</button>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-10">
-                    <div class="space-y-2">
-                        <h3 class="text-3xl font-black italic">THE DICTIONARY</h3>
-                        <p class="font-black italic text-zinc-500"><span class="text-red-600">BED & BREAKFAST:</span> SCORING 26.</p>
-                        <p class="font-black italic text-zinc-500"><span class="text-red-600">FISH & CHIPS:</span> SCORING 33.</p>
-                    </div>
-                    <div class="bg-red-600 p-4 text-black font-black italic">WINNER BUYS THE FIRST ROUND. NO EXCUSES.</div>
                 </div>
             </div>
         </div>
@@ -129,18 +146,19 @@
                 <template x-for="(p, i) in players" :key="i">
                     <div class="player-card" :class="active === i ? 'active-card' : ''">
                         <div class="text-center">
-                            <div class="font-black text-sm italic opacity-60" x-text="p.name"></div>
-                            <div class="text-[10px] font-black text-red-600 uppercase" x-text="p.sets+'S | '+p.legs+'L'"></div>
+                            <div class="font-black text-xl italic opacity-50" x-text="p.name"></div>
+                            <div class="text-xs font-black text-red-600 tracking-widest" x-text="p.sets+'S | '+p.legs+'L'"></div>
                         </div>
+                        
                         <div class="score-text" :class="players.length > 2 ? 'score-small' : 'score-large'" x-text="p.score"></div>
                         
-                        <div class="h-8 flex items-center">
+                        <div class="h-16 flex items-center text-center px-4">
                             <template x-if="active === i">
-                                <span class="text-xl lg:text-3xl font-black text-red-600 italic" x-text="currentInput || getCheckout(p.score)"></span>
+                                <span class="text-2xl lg:text-5xl font-black text-red-600 italic tracking-tighter" x-text="currentInput || getCheckout(p.score)"></span>
                             </template>
                         </div>
                         
-                        <div class="text-[10px] font-black text-zinc-500 uppercase">AVG: <span class="text-white" x-text="calcAvg(p)"></span></div>
+                        <div class="font-black text-zinc-500 italic">AVG: <span class="text-white" x-text="calcAvg(p)"></span></div>
                     </div>
                 </template>
             </div>
@@ -152,12 +170,12 @@
                 <button @touchstart.prevent="undo()" class="btn-action">UNDO</button>
                 <button @touchstart.prevent="addNum('0')">0</button>
                 <button @touchstart.prevent="location.reload()" class="btn-action text-red-600">QUIT</button>
-                <button @touchstart.prevent="submit()" class="btn-enter">ENTER SCORE</button>
+                <button @touchstart.prevent="submit()" class="btn-enter italic">ENTER</button>
             </div>
 
             <div class="desktop-btns hidden lg:flex">
                 <button @click="undo()" class="d-btn">UNDO</button>
-                <button @click="location.reload()" class="d-btn text-red-600">QUIT</button>
+                <button @click="location.reload()" class="d-btn">QUIT</button>
             </div>
         </div>
     </template>
@@ -173,13 +191,13 @@
                     170: "T20 T20 BULL", 167: "T20 T19 BULL", 164: "T20 T18 BULL", 161: "T20 T17 BULL", 160: "T20 T20 D20",
                     158: "T20 T20 D19", 157: "T20 T19 D20", 156: "T20 T20 D18", 155: "T20 T19 D19", 154: "T20 T18 D20",
                     141: "T20 T15 D18", 121: "T20 T15 D8", 100: "T20 D20", 80: "T20 D10", 60: "S20 D20", 50: "S10 D20",
-                    40: "D20", 38: "D19", 36: "D18", 32: "D16", 20: "D10", 16: "D8", 8: "D4", 4: "D2", 2: "D1"
+                    40: "D20", 32: "D16", 16: "D8", 8: "D4", 4: "D2", 2: "D1"
                 },
 
                 getCheckout(s) { return this.checkouts[s] || (s <= 170 && s > 1 ? "FINISH ON DOUBLE" : ""); },
                 start() {
                     const names = this.setupPlayers.filter(n => n.trim() !== '');
-                    this.players = (names.length >= 2 ? names : ['MUG 1', 'MUG 2']).map(n => ({
+                    this.players = (names.length >= 2 ? names : ['LEGEND 1', 'LEGEND 2']).map(n => ({
                         name: n.toUpperCase(), score: this.startScore, legs: 0, sets: 0, pts: 0, darts: 0
                     }));
                     this.screen = 'game';
@@ -190,6 +208,7 @@
                     if (!isNaN(k)) this.addNum(k);
                     if (k === 'Enter') this.submit();
                     if (k === 'Backspace') this.currentInput = this.currentInput.slice(0, -1);
+                    if (k === 'Delete') this.undo();
                 },
                 submit() {
                     const val = parseInt(this.currentInput);
